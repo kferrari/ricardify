@@ -6,6 +6,12 @@ from datetime import date, timedelta
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
+def ad_known(id):
+    for i, d in enumerate(dic["inserate"]):
+        if d["id"] == id:
+            return 1
+    return 0
+
 # Parse arguments
 parser = argparse.ArgumentParser(
 description="This script will watch ricardo.ch for new ads and notify you via telegram. Also, it keeps a record of listings with prices in a JSON file."
@@ -59,6 +65,7 @@ while True:
 
             url = item.get("href")
             url = "https://www.ricardo.ch" + url
+            unique_id = url[-11:-1]
 
             all_text = item.find_all(text=True)
 
@@ -72,7 +79,7 @@ while True:
                 buy_now = "none"
 
             # Create dict for first advertisement
-            new_dict = {"name" : title, "url" : url, "bids": bids, "price": price, "buy_now": buy_now}
+            new_dict = {"id": unique_id, "name" : title, "url" : url, "bids": bids, "price": price, "buy_now": buy_now}
 
             # Check if file exists already and create if not
             fname = args.query.lower() + "_dictionary.json"
@@ -88,19 +95,23 @@ while True:
                 # notify
                 print("New listing...")
                 if not args.silent:
-                    message = 'Neues Inserat: {} - {} ({}). Sofort kaufen: {}\n {}'.format(title, bids, price, buy_now, url)
+                    message = 'Neues Inserat: {} - {} ({}).'.format(title, bids, price)
+                    try:
+                        message += ' Sofort kaufen: {}'.format(buy_now)
+                    except:
+                        # No buy now price listed
+                        pass
+
+                    message += '\n{}'.format(url)
                     telegram_send.send(messages=[message])
 
             else:
                 with open(fname,'r+') as f:
                     dic = json.load(f)
 
-                    if new_dict in dic["inserate"]:
+                    if ad_known(unique_id):
                         print("same..")
 
-                        # If listing is known, skip all afterwards
-                        f.close()
-                        break
                     else:
                         dic["inserate"].append(new_dict)
                         f.seek(0)
@@ -109,7 +120,14 @@ while True:
                         # notify
                         print("New listing...")
                         if not args.silent:
-                            message = 'Neues Inserat: {} - {} ({}). Sofort kaufen: {}\n {}'.format(title, bids, price, buy_now, url)
+                            message = 'Neues Inserat: {} - {} ({}).'.format(title, bids, price)
+                            try:
+                                message += ' Sofort kaufen: {}'.format(buy_now)
+                            except:
+                                # No buynow price set
+                                pass
+
+                            message += '\n{}'.format(url)
                             telegram_send.send(messages=[message])
 
             # Close file

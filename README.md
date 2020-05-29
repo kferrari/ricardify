@@ -5,7 +5,7 @@
  ### Install
 
  * Clone this repo or download ricardify.py.
- * Edit headers{} in ricardify.py to include your name and email address, if you want. This is good practice in case someone over at tutti.ch wants to contact you.
+ * Edit headers{} in ricardify.py to include your name and email address, if you want. This is good practice in case someone over at ricardo.ch wants to contact you.
  * Install [telegram-send](https://pypi.org/project/telegram-send/) and run `telegram-send --configure` to set up your personal Bot.
  * Install [beautifulsoup](https://pypi.org/project/beautifulsoup4/).
 

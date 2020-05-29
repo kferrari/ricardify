@@ -1,6 +1,6 @@
 import telegram_send, time
 import json
-import argparse, os
+import argparse, os, sys
 from datetime import date, timedelta
 
 from urllib.request import urlopen
@@ -61,6 +61,9 @@ while True:
 
         list_all = soup.body.find_all('a', attrs={"class":"link--2OHFZ"})
 
+        n_new = 0
+        sys.stdout.write("\r {} new listings".format(n_new))
+
         for item in list_all:
 
             url = item.get("href")
@@ -69,14 +72,33 @@ while True:
 
             all_text = item.find_all(text=True)
 
-            title = all_text[1]
-            bids = all_text[3]
-            price = all_text[4]
+            if "turned_in_not" in all_text: all_text.remove("turned_in_not")
 
-            try:
-                buy_now = all_text[6]
-            except:
-                buy_now = "none"
+            emoji = ""
+            if "rocket" in all_text:
+                all_text.remove("rocket")
+                emoji += "🚀"
+
+            title = all_text[0]
+
+            if "Neu eingestellt" in all_text:
+                all_text.remove("Neu eingestellt")
+                emoji += "🆕"
+
+            bids = all_text[2]
+            price = all_text[3]
+
+            if not "Sofort kaufen" in all_text:
+                # auction only
+                buy_now = "nur Auktion"
+
+            elif len(all_text) == 4:
+                # buy now only
+                buy_now = "nur Sofortkauf"
+
+            elif len(all_text) == 6:
+                # both
+                buy_now = all_text[4] + ": " + all_text[5]
 
             # Create dict for first advertisement
             new_dict = {"id": unique_id, "name" : title, "url" : url, "bids": bids, "price": price, "buy_now": buy_now}
@@ -93,15 +115,11 @@ while True:
                     json.dump(mydict, f)
 
                 # notify
-                print("New listing...")
-                if not args.silent:
-                    message = 'Neues Inserat: {} - {} ({}).'.format(title, bids, price)
-                    try:
-                        message += ' Sofort kaufen: {}'.format(buy_now)
-                    except:
-                        # No buy now price listed
-                        pass
+                n_new += 1
+                sys.stdout.write("\r {} new listings".format(n_new))
 
+                if not args.silent:
+                    message = 'Neues Inserat: ' + emoji + '{} - {}: {} - {}.'.format(title, bids, price, buy_now)
                     message += '\n{}'.format(url)
                     telegram_send.send(messages=[message])
 
@@ -110,7 +128,8 @@ while True:
                     dic = json.load(f)
 
                     if ad_known(unique_id):
-                        print("same..")
+                        # do nothing
+                        pass
 
                     else:
                         dic["inserate"].append(new_dict)
@@ -118,16 +137,11 @@ while True:
                         json.dump(dic, f)
 
                         # notify
-                        print("New listing...")
+                        n_new += 1
+                        sys.stdout.write("\r {} new listings".format(n_new))
+
                         if not args.silent:
-                            message = 'Neues Inserat: {} - {} ({}).'.format(title, bids, price)
-                            try:
-                                message += ' Sofort kaufen: {}'.format(buy_now)
-
-                            except:
-                                # No buynow price set
-                                pass
-
+                            message = 'Neues Inserat: ' + emoji + '{} - {}: {} - {}.'.format(title, bids, price, buy_now)
                             message += '\n{}'.format(url)
                             telegram_send.send(messages=[message])
 
@@ -139,5 +153,5 @@ while True:
 
     except:
         # Wait half a minute, in case the server isn't reachable
-        print("Server not reachable or other error")
+        sys.stdout.write("\nServer not reachable or other error")
         time.sleep(30)

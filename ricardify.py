@@ -27,6 +27,8 @@ parser.add_argument('-mi', '--minprice', metavar="minPrice", type=int, default=0
     help="Lowest price to still look for.")
 parser.add_argument('-s', '--silent', action='store_true', default=False,
     help="Don't send notifications.")
+parser.add_argument('-u', '--used', action='store_true', default=False,
+    help="Only show ads for used items.")
 
 args = parser.parse_args()
 
@@ -54,6 +56,9 @@ while True:
 
             if args.range:
                 search_url += "&range=" + str(args.range)
+
+        if args.used:
+            search_url += "&item_condition=used"
 
         # Download page
         html = urlopen(search_url)

@@ -1,6 +1,6 @@
 # ricardify
 
- Little sister of [tuttify](https.//github.com/kferrari/tuttify). Still a work-in-progress.
+ Little sister of [tuttify](https://github.com/kferrari/tuttify). Still a work-in-progress.
 
  ### Install
 

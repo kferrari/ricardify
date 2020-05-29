@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(
 description="This script will watch ricardo.ch for new ads and notify you via telegram. Also, it keeps a record of listings with prices in a JSON file."
 )
 parser.add_argument('query', metavar="Query", type=str, help='tutti.ch search string')
-parser.add_argument('-z', '--zipcode', metavar="Canton", type=int, default=0,
+parser.add_argument('-z', '--zipcode', metavar="ZIPcode", type=int, default=0,
     help="ZIP code")
 parser.add_argument('-r', '--range', metavar="Range", type=int, default=20,
     help="The range in km around ZIP code.")
@@ -123,6 +123,7 @@ while True:
                             message = 'Neues Inserat: {} - {} ({}).'.format(title, bids, price)
                             try:
                                 message += ' Sofort kaufen: {}'.format(buy_now)
+
                             except:
                                 # No buynow price set
                                 pass
